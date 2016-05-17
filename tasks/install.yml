@@ -1,0 +1,70 @@
+---
+
+- name: Install supporting packages
+  become: yes
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - unzip
+
+- name: Create required directories
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ haproxy_consul.consul_template.conf_dir }}"
+    - "{{ haproxy_consul.consul_template.log_dir }}"
+
+- name: Add Haproxy PPA
+  become: yes
+  apt_repository:
+    repo: "{{ haproxy_consul.haproxy.ppa }}"
+    update_cache: true
+
+- name: Install Haproxy
+  become: yes
+  apt:
+    pkg: "haproxy={{ haproxy_consul.haproxy.version }}"
+    state: present
+
+- name: Download consul-template
+  become: yes
+  get_url:
+    dest: "/usr/local/src/consul-template_{{ haproxy_consul.consul_template.version }}_linux_amd64.zip"
+    url: "https://releases.hashicorp.com/consul-template/{{ haproxy_consul.consul_template.version }}/consul-template_{{ haproxy_consul.consul_template.version }}_linux_amd64.zip"
+
+- name: Extract consul-template
+  become: yes
+  unarchive:
+    copy: no
+    dest: /usr/local/src/
+    creates: /usr/local/src/consul-template
+    src: "/usr/local/src/consul-template_{{ haproxy_consul.consul_template.version }}_linux_amd64.zip"
+
+- name: Link to consul-template
+  become: yes
+  file:
+    dest: /usr/bin/consul-template
+    mode: 731
+    src: /usr/local/src/consul-template
+    state: link
+
+- name: Ensure Haproxy runs on boot
+  become: yes
+  service:
+    enabled: true
+    name: haproxy
+
+- name: Install consul-template service
+  become: yes
+  template:
+    dest: /etc/init/consul-template.conf
+    mode: 0755
+    src: consul-template/consul-template.conf.j2
+
+- name: Enable consul-template service
+  become: yes
+  service:
+    enabled: yes
+    name: consul-template

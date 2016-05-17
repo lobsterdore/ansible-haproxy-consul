@@ -1,0 +1,13 @@
+---
+
+haproxy_consul:
+
+  consul_template:
+    conf_dir: /etc/consul-template.d
+    log_dir: /var/log/consul-template
+    version: 0.14.0
+
+  haproxy:
+    default_config: yes
+    ppa: ppa:vbernat/haproxy-1.6
+    version: 1.6.*

@@ -1,0 +1,16 @@
+description "consul-template"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+
+script
+  # Make sure to use all our CPUs
+  export GOMAXPROCS=`nproc`
+  export GOGC=800
+
+  exec /usr/bin/consul-template \
+    -config=/etc/consul-template.d/config.hcl
+    >> {{ haproxy_consul.consul_template.log_dir }}/consul-template.log 2>&1
+end script

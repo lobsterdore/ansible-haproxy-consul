@@ -1,0 +1,49 @@
+---
+
+- name: start consul-template
+  become: yes
+  service:
+    name: consul-template
+    state: started
+
+- name: stop consul-template
+  become: yes
+  service:
+    name: consul-template
+    state: stopped
+
+- name: reload consul-template
+  become: yes
+  service:
+    name: consul-template
+    state: reloaded
+
+- name: restart consul-template
+  become: yes
+  service:
+    name: consul-template
+    state: restarted
+
+- name: start haproxy
+  become: yes
+  service:
+    name: haproxy
+    state: started
+
+- name: stop haproxy
+  become: yes
+  service:
+    name: haproxy
+    state: stopped
+
+- name: reload haproxy
+  become: yes
+  service:
+    name: haproxy
+    state: reloaded
+
+- name: restart haproxy
+  become: yes
+  service:
+    name: haproxy
+    state: restarted

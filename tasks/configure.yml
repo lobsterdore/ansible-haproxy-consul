@@ -1,0 +1,18 @@
+---
+
+- name: Create consul-template config
+  become: yes
+  template:
+    dest: "{{ haproxy_consul.consul_template.conf_dir }}/config.hcl"
+    src: consul-template/config.hcl.j2
+  notify:
+    - restart consul-template
+
+- name: Create consul-template Haproxy config
+  become: yes
+  template:
+    dest: "{{ haproxy_consul.consul_template.conf_dir }}/haproxy.ctmpl"
+    src: consul-template/haproxy.ctmpl.j2
+  when: haproxy_consul.haproxy.default_config
+  notify:
+    - restart consul-template
