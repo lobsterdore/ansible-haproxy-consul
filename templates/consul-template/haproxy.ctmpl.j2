@@ -1,9 +1,36 @@
 global
+    chroot /var/lib/haproxy
+    maxconn 4096
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
     daemon
-    maxconn 256
 
 defaults
-    mode tcp
+    log global
+    log 127.0.0.1 local0
+    mode http
+    option httplog
+    option dontlognull
+    option forwardfor
+    option http-server-close
+    retries 3
+    option redispatch
     timeout connect 5000ms
-    timeout client 60000ms
-    timeout server 60000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+{% raw %}
+frontend http-in
+    bind *:80{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}{{range $a.Tags}}{{$tag:=.}}{{if $tag | regexMatch "^urlprefix-(.+)" }}
+    use_backend instances_{{$a.Name}} if { hdr(Host) -i {{$tag | regexReplaceAll "^urlprefix-(.+)" "$1"}} }{{end}}{{end}}{{end}}{{end}}
+
+{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}
+backend instances_{{$a.Name}}
+    balance leastconn
+    option httpclose
+    option forwardfor
+    cookie JSESSIONID prefix{{range $c,$d:=service $a.Name}}
+    server instance{{$c}} {{.Address}}:{{.Port}} cookie A check{{end}}{{end}}{{end}}
+{% endraw %}
