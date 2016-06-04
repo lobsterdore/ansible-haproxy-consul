@@ -6,31 +6,49 @@ global
     user haproxy
     group haproxy
     daemon
+    tune.ssl.default-dh-param 1024
 
 defaults
     log global
     log 127.0.0.1 local0
     mode http
+    balance leastconn
+    option httpclose
+    option forwardfor
     option httplog
     option dontlognull
     option forwardfor
     option http-server-close
-    retries 3
     option redispatch
-    timeout connect 5000ms
-    timeout client 50000ms
-    timeout server 50000ms
+    retries 5
+    timeout http-request 10s
+    timeout queue 1m
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+    timeout http-keep-alive 10s
+    timeout check 10s
+
+frontend http-in
+    bind *:80
+    {% if haproxy_consul.haproxy.ssl_pems_dir %}
+
+    bind *:443 ssl crt {{ haproxy_consul.haproxy.ssl_pems_dir }}
+    reqadd X-Forwarded-Proto:\ https if { ssl_fc }
+    {% endif %}
+
+    {% raw %}{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}{{range $a.Tags}}{{$tag:=.}}{{if $tag | regexMatch "^urlprefix-(.+)" }}{% endraw %}use_backend instances_{% raw %}{{$a.Name}}{% endraw %} if { hdr(Host) -i {% raw %}{{$tag | regexReplaceAll "^urlprefix-(.+)" "$1"}} }{{end}}{{end}}{{end}}
+
+    {{end}}{% endraw %}
+
+{% raw %}{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}{% endraw %}
+backend instances_{% raw %}{{$a.Name}}{% endraw %}
+
+    cookie JSESSIONID prefix{% raw %}{{range $c,$d:=service $a.Name}}{% endraw %}
+
+    option tcp-check
+    server instance{% raw %}{{$c}} {{.Address}}:{{.Port}}{% endraw %} cookie A check port {% raw %}{{.Port}}{{end}}{{end}}{% endraw %}
 
 {% raw %}
-frontend http-in
-    bind *:80{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}{{range $a.Tags}}{{$tag:=.}}{{if $tag | regexMatch "^urlprefix-(.+)" }}
-    use_backend instances_{{$a.Name}} if { hdr(Host) -i {{$tag | regexReplaceAll "^urlprefix-(.+)" "$1"}} }{{end}}{{end}}{{end}}{{end}}
 
-{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}
-backend instances_{{$a.Name}}
-    balance leastconn
-    option httpclose
-    option forwardfor
-    cookie JSESSIONID prefix{{range $c,$d:=service $a.Name}}
-    server instance{{$c}} {{.Address}}:{{.Port}} cookie A check{{end}}{{end}}{{end}}
-{% endraw %}
+{{end}}{% endraw %}

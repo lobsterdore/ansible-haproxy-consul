@@ -2,6 +2,12 @@
 
 haproxy_consul:
 
+  aws:
+    ec2_elastic_ip: ~
+    r53_zone: ~
+    r53_record: ~
+    region: eu-west-1
+
   consul_template:
     conf_dir: /etc/consul-template.d
     log_dir: /var/log/consul-template
@@ -10,4 +16,5 @@ haproxy_consul:
   haproxy:
     default_config: yes
     ppa: ppa:vbernat/haproxy-1.6
+    ssl_pems_dir: no
     version: 1.6.*

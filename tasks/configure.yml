@@ -7,6 +7,7 @@
     src: consul-template/config.hcl.j2
   notify:
     - restart consul-template
+    - restart haproxy
 
 - name: Create consul-template Haproxy config
   become: yes
@@ -16,3 +17,26 @@
   when: haproxy_consul.haproxy.default_config
   notify:
     - restart consul-template
+    - restart haproxy
+
+- name: Gather AWS facts
+  action: ec2_facts
+  register: ec2_vars
+
+- name: Associate Elastic IP
+  ec2_eip:
+    instance_id: "{{ ansible_ec2_instance_id }}"
+    ip: "{{ haproxy_consul.aws.ec2_elastic_ip }}"
+    region: "{{ haproxy_consul.aws.region }}"
+  when: ansible_ec2_instance_id is defined and haproxy_consul.aws.ec2_elastic_ip
+
+- name: Associate R53 record
+  route53:
+    command: create
+    zone: "{{ haproxy_consul.aws.r53_zone }}"
+    record: "{{ haproxy_consul.aws.r53_record }}"
+    type: A
+    ttl: 0
+    value: "{{ ansible_ec2_public_ipv4 }}"
+    wait: yes
+  when: ansible_ec2_public_ipv4 is defined and haproxy_consul.aws.r53_record
