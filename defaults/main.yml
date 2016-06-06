@@ -8,6 +8,10 @@ haproxy_consul:
     r53_record: ~
     region: eu-west-1
 
+  consul:
+    tags:
+      - loadbalanced
+
   consul_template:
     conf_dir: /etc/consul-template.d
     log_dir: /var/log/consul-template
