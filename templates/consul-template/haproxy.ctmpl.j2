@@ -41,7 +41,7 @@ frontend http-in
 
     {{end}}{% endraw %}
 
-{% raw %}{{range $i,$a:=services}}{{if .Tags | contains "loadbalanced"}}{% endraw %}
+{% raw %}{{range $i,$a:=services}}{{if or {% endraw %}{% for tag in haproxy_consul.consul.tags %} (.Tags | contains "{{ tag }}") {% endfor %}{% raw %}}}{% endraw %}
 backend instances_{% raw %}{{$a.Name}}{% endraw %}
 
     cookie JSESSIONID prefix{% raw %}{{range $c,$d:=service $a.Name}}{% endraw %}

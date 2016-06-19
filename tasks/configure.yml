@@ -33,10 +33,10 @@
 - name: Associate R53 record
   route53:
     command: create
-    zone: "{{ haproxy_consul.aws.r53_zone }}"
+    overwrite: yes
     record: "{{ haproxy_consul.aws.r53_record }}"
-    type: A
     ttl: 0
+    type: A
     value: "{{ ansible_ec2_public_ipv4 }}"
-    wait: yes
+    zone: "{{ haproxy_consul.aws.r53_zone }}"
   when: ansible_ec2_public_ipv4 is defined and haproxy_consul.aws.r53_record
