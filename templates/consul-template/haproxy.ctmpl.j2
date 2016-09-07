@@ -31,11 +31,11 @@ defaults
 
 frontend http-in
     bind *:80
-    {{ if haproxy_consul.haproxy.ssl_pems_dir }}
+    {% if haproxy_consul.haproxy.ssl_pems_dir %}
 
     bind *:443 ssl crt {{ haproxy_consul.haproxy.ssl_pems_dir }}
     reqadd X-Forwarded-Proto:\ https if { ssl_fc }
-    {{ endif }}
+    {% endif %}
 
     {% raw %}{{range $i,$a:=services}}{{if or {% endraw %}{% for tag in haproxy_consul.consul.tags %} (.Tags | contains "{{ tag }}") {% endfor %}{% raw %}}}{{range $a.Tags}}{{$tag:=.}}{{if $tag | regexMatch "^hostnames-(.+)" }}{% endraw %}use_backend instances_{% raw %}{{$a.Name}}{% endraw %} if { hdr(Host) -i {% raw %}{{$tag | regexReplaceAll "^hostnames-(.+)" "$1"}} }{{end}}{{end}}{{end}}
 
