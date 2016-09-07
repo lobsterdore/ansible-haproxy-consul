@@ -1,9 +1,5 @@
 ---
 
-- name: Debug
-  debug:
-    msg: "{{ haproxy_consul }}"
-
 - name: Install supporting packages
   become: yes
   apt:
