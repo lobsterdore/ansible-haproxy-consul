@@ -1,5 +1,5 @@
 template {
   source = "/etc/consul-template.d/haproxy.ctmpl"
   destination = "/etc/haproxy/haproxy.cfg"
-  command = "haproxy -f /etc/haproxy/haproxy.cfg -sf $(pidof haproxy) &"
+  command = "service haproxy reload"
 }
