@@ -20,5 +20,7 @@ haproxy_consul:
   haproxy:
     default_config: yes
     ppa: ppa:vbernat/haproxy-1.6
-    ssl_pems_dir: no
+    ssl:
+      enabled: no
+      pems_dir: /etc/ssl/haproxy/pem
     version: 1.6.*
