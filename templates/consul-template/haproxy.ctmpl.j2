@@ -31,7 +31,7 @@ defaults
 
 frontend http-in
     bind *:80
-    {% if haproxy_consul.haproxy.ssl_pems_dir %}
+    {% if haproxy_consul.haproxy.ssl_pems_dir | bool %}
 
     bind *:443 ssl crt {{ haproxy_consul.haproxy.ssl_pems_dir }}
     reqadd X-Forwarded-Proto:\ https if { ssl_fc }
