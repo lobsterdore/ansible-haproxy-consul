@@ -30,6 +30,11 @@
     region: "{{ haproxy_consul.aws.region }}"
   when: ansible_ec2_instance_id is defined and haproxy_consul.aws.ec2_elastic_ip
 
+- name: Set interface type
+  set_fact:
+    haproxy_consul:
+      interface_type: "{{ 'public' if haproxy_consul.aws.schema is 'Public' else 'local' }}"
+
 - name: Associate R53 record
   route53:
     command: create
@@ -37,6 +42,6 @@
     record: "{{ haproxy_consul.aws.r53_record }}"
     ttl: 0
     type: A
-    value: "{{ ansible_ec2_public_ipv4 }}"
+    value: "{{ ec2_vars['ansible_facts']['ansible_ec2_' + haproxy_consul.interface_type + '_ipv4'] }}"
     zone: "{{ haproxy_consul.aws.r53_zone }}"
-  when: ansible_ec2_public_ipv4 is defined and haproxy_consul.aws.r53_record
+  when: ansible_ec2_instance_id is defined and haproxy_consul.aws.r53_record

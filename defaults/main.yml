@@ -4,6 +4,8 @@ haproxy_consul:
 
   aws:
     ec2_elastic_ip: ~
+    # Public or Private
+    schema: Public
     r53_zone: ~
     r53_record: ~
     region: eu-west-1
