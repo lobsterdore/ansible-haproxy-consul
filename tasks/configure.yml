@@ -33,7 +33,7 @@
 - name: Set interface type
   set_fact:
     haproxy_consul:
-      interface_type: "{{ 'public' if haproxy_consul.aws.schema is 'Public' else 'local' }}"
+      interface_type: "{{ 'public' if haproxy_consul.aws.schema == 'Public' else 'local' }}"
 
 - name: Associate R53 record
   route53:
