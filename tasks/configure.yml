@@ -19,16 +19,30 @@
     - restart consul-template
     - restart haproxy
 
-- name: Gather AWS facts
-  action: ec2_facts
+- name: Check if in AWS
+  uri:
+    url: http://169.254.169.254/latest/meta-data
+  register: haproxy_consul_aws_uri_check
+  failed_when: no
+
+- name: Set haproxy_consul_inside_aws Fact
+  set_fact:
+    haproxy_consul_inside_aws: "{{ haproxy_consul_aws_uri_check.status == 200 }}"
+
+- name: EC2 fact hunt
+  action: ec2_metadata_facts
   register: ec2_vars
+  when: haproxy_consul_inside_aws == true
 
 - name: Associate Elastic IP
   ec2_eip:
     instance_id: "{{ ansible_ec2_instance_id }}"
     ip: "{{ haproxy_consul.aws.ec2_elastic_ip }}"
     region: "{{ haproxy_consul.aws.region }}"
-  when: ansible_ec2_instance_id is defined and haproxy_consul.aws.ec2_elastic_ip
+  when:
+    - haproxy_consul_inside_aws == true
+    - ansible_ec2_instance_id is defined
+    - haproxy_consul.aws.ec2_elastic_ip
 
 - name: Set interface type
   set_fact:
@@ -44,4 +58,7 @@
     type: A
     value: "{{ ec2_vars['ansible_facts']['ansible_ec2_' + haproxy_consul.interface_type + '_ipv4'] }}"
     zone: "{{ haproxy_consul.aws.r53_zone }}"
-  when: ansible_ec2_instance_id is defined and haproxy_consul.aws.r53_record
+  when:
+    - ansible_ec2_instance_id is defined
+    - haproxy_consul.aws.r53_record
+    - haproxy_consul_inside_aws == true
