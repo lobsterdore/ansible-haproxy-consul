@@ -56,15 +56,38 @@
     enabled: true
     name: haproxy
 
-- name: Install consul-template service
+- name: Install consul-template service for SysV
   become: yes
   template:
     dest: /etc/init/consul-template.conf
     mode: 0755
     src: consul-template/consul-template.conf.j2
+  when:
+    - ansible_service_mgr != "systemd"
 
 - name: Enable consul-template service
   become: yes
   service:
     enabled: yes
     name: consul-template
+  when:
+    - ansible_service_mgr != "systemd"
+
+- name: Install consul-template service for SystemD
+  become: yes
+  template:
+    dest: /etc/systemd/system/consul-template.service
+    mode: 0755
+    src: consul-template/systemd.conf.j2
+  when:
+    - ansible_service_mgr == "systemd"
+
+- name: Enable consul-template service for SystemD
+  become: yes
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: consul-template
+  when:
+    - ansible_service_mgr == "systemd"
+
